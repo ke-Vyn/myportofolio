@@ -32,7 +32,7 @@ Kelas : PBP C
 
 ## C. Reflection :
 ### Assignment 1
-1. Yes, i used semantic HTML5 elements ('<header>', '<main>', '<section>', '<footer>') to structure the page based on its content's purpose. I separated the "About Me" content into a '<section class="hero">' and the new content into '<section class="Highlights">'. I also used '<dl>', '<dt>' and '<dd>' to display NPM and study program since they're a label value pair. This made the structure easier to read from the HTML, and should also make the page look more readable for readers.
+1. Yes, i used semantic HTML5 elements (`<header>`, `<main>`, `<section>`, `<footer>`) to structure the page based on its content's purpose. I separated the "About Me" content into a `<section class="hero">` and the new content into `<section class="Highlights">`. I also used `<dl>`, `<dt>` and `<dd>` to display NPM and study program since they're a label value pair. This made the structure easier to read from the HTML, and should also make the page look more readable for readers.
 
 2. The main challenge was deciding how elements should reflow when the grid changes from 2 column to 1 column (mobile). On laptop / desktop, the hero section places the photo beside the identity and details using 'grid-template-areas'. If it wasn't reordered, the photo could end up appearing last, even though it's one of more important elements. I addressed this by rearranging 'grid-template'areas' so the order becomes identity > photo > details when stacked vertically on mobile. I also set the photo's maximum width to 220px on mobile so that it wouldn't dominate smaller screen. For the highlights section, i changed the grid from 3 columns to 1 column below 700px, so each card would have enough horizontal space to read comfortably.
 
