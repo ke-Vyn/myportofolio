@@ -193,3 +193,9 @@ h1, .brand {
         justify-content: flex-start;
     }
 }
+
+.hero {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+}
