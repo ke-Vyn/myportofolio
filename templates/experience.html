@@ -16,6 +16,7 @@
             <nav>
                 <a href="{% url 'main:show_main' %}">Profile</a>
                 <a href="{% url 'main:show_experience' %}">Experience</a>
+                <a href="{% url 'main:show_projects' %}">Projects</a>
             </nav>
         </div>
     </header>
@@ -55,7 +56,7 @@
 
     <footer class="site-footer">
         <div class="container">
-            <p>&copy; 2026 Kevin. Fakultas Ilmu Komputer, Universitas Indonesia.</p>
+            <p>&copy; 2026 {{ name }}. Fakultas Ilmu Komputer, Universitas Indonesia.</p>
         </div>
     </footer>
 </body>
