@@ -6,7 +6,7 @@ Kelas : PBP C
 
 #Hi from another branch
 
-# 7/9/2026
+# 7/9/2026 - Tugas 1
 ## A.Weekly Instruction Step :
 1. Clone this repository
     git clone https://github.com/ke-Vyn/myportofolio.git
