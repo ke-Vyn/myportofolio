@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block meta %}
+    <title>Education - {{ name }}</title>
+{% endblock meta %}
+{% block content %}
+    <main>
+        <section class="experience-section" id="education">
+            <div class="container">
+                <p class="hero-kicker">My academic background</p>
+                <div class="project-header">
+                    <h1>Education</h1>
+                    <a href="{% url 'main:create_education' %}"
+                       class="button project-add-button">
+                        <span aria-hidden="true">+</span>
+                        Tambah Education
+                    </a>
+                </div>
+                <form method="get"
+                      action="{% url 'main:show_education' %}"
+                      class="project-search">
+                    <input type="search"
+                           name="institution"
+                           value="{{ institution_query }}"
+                           placeholder="Cari berdasarkan institusi"
+                           class="project-search__input"
+                           aria-label="Cari berdasarkan institusi">
+                    <button type="submit" class="button">Cari</button>
+                </form>
+                <div class="experience-list">
+                    {% for edu in education_list %}
+                        <article class="experience-card">
+                            <h3>{{ edu.degree }}</h3>
+                            <span class="experience-category">{{ edu.institution }}</span>
+                            <p>{{ edu.description }}</p>
+                            <p class="experience-status">
+                                {{ edu.start_year }} - {% if edu.end_year %}{{ edu.end_year }}{% else %}Sekarang{% endif %}
+                            </p>
+                            <div class="project-card-actions">
+                                <div class="project-actions">
+                                    <a href="{% url 'main:update_education' edu.id %}" class="button button-secondary">Edit</a>
+                                    <form method="post" action="{% url 'main:delete_education' edu.id %}" style="display:inline;">
+                                        {% csrf_token %}
+                                        <button type="submit" class="button button-danger">Hapus</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </article>
+                    {% empty %}
+                        {% if institution_query %}
+                            <p class="empty-state">Tidak ada riwayat pendidikan dari institusi tersebut.</p>
+                        {% else %}
+                            <p class="empty-state">No education has been added yet.</p>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
+    </main>
+{% endblock content %}
