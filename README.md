@@ -78,3 +78,35 @@ Kelas : PBP C
 ## D. AI Disclosure : 
 - Tool used: Claude.ai
 - How it was used: Diskusi mengenai alur MVT untuk section Experience dan Projects, termasuk desain field model, struktur view/context, dan sintaks Django Template Language untuk loop dan empty state. Selain itu, Ai juga digunakan untuk debugging masalah saat deployment di PWS, seperti perbedaan database lokal dan production
+
+# 14/9/2026 - Tugas 2
+## A. Weekly Instruction Step :
+1. Clone this repository
+    git clone https://github.com/ke-Vyn/myportofolio.git
+    cd myportofolio
+2. Create a virtual environment and activate it
+    python -m venv env
+    env\Scripts\activate
+3. Install Dependencies 
+    pip install -r requirements.txt
+4. Run server
+    python manage.py runserver
+5. Open `http://localhost:8000` in any browser
+
+## B. Weekly Updates :
+1. Menerapkan template inheritance menggunakan base.html sebagai kerangka utama halaman (navbar, head, dan footer)
+2. Mengimplementasikan fitur Create & Delete pada bagian Projects, serta endpoint data JSON via Django serializers
+3. Menambahkan section Education dengan model, form, fungsionalitas penuh CRUD, serta endpoint JSON
+4. Mengintegrasikan rute halaman Education ke dalam navbar di base.html
+
+## C. Reflection : 
+### Assignment 3
+1. 
+
+2.
+
+3. 
+
+## D. AI Closure : 
+- Tool used: Claude.ai
+- How it was used: 
