@@ -79,7 +79,9 @@ Kelas : PBP C
 - Tool used: Claude.ai
 - How it was used: Diskusi mengenai alur MVT untuk section Experience dan Projects, termasuk desain field model, struktur view/context, dan sintaks Django Template Language untuk loop dan empty state. Selain itu, Ai juga digunakan untuk debugging masalah saat deployment di PWS, seperti perbedaan database lokal dan production
 
-# 14/9/2026 - Tugas 2
+---
+
+# 21/9/2026 - Tugas 3
 ## A. Weekly Instruction Step :
 1. Clone this repository
     git clone https://github.com/ke-Vyn/myportofolio.git
@@ -101,12 +103,23 @@ Kelas : PBP C
 
 ## C. Reflection : 
 ### Assignment 3
-1. 
+1. A. Modelform digunakan karena secara otomatis memetakan field input HTML sesuai tipe data dan validasi pada model Django (contoh: validasi format URL,batas panjang karakter, ataau status required). Selain itu, `ModelForm` menyediakan method `save()` yang otomatis menangani logika *insert* & *update* ke database tanpa query manual, sehingga meminimalkan redundansi kode dan mencegah inkonsistensi antara struktur form & database
+   B. Fungsi `{% csrf_token %}` untuk melindungi aplikasi dari serangan Cross-Site Request Forgery, yaitu upaya pihak luar mengirimkan request seperti submit form atas nama sesi/identitas pengguna yang sedang aktif. Token ini memastikan bahwa data yang diproses server benar-benar berasal dari form resmi aplikasi sendiri, bukan situs luar/eksternal
 
-2.
+2. -Struktur data lebih ringkas: JSON menggunakan format pasangan key-value tanpa memerlukan tag (`<tag>...</tag>`) pada XML , sehingga ukuran payload jaringan lebih kecil dan transmisi data lebih cepat.
+   -JSON bersifat native terhadap JavaScript, sehingga dapat langsung diubah menjadi objek menggunakan `JSON.parse()` tanpa memerlukan parser tambahan seperti pada XML
+   -JSON lebih _human-readable_ dan didukung oleh banyak bahasa pemrograman modern, sehingga menjadi format standar yang efisien untuk data delivery
 
-3. 
+3. A.Alur Pengembalian Data:
+   1. Data entitas diambil dari database melalui Django ORM (misalnya `Education.objects.all()`), menghasilkan QuerySet berupa sekumpulan objek Python
+   2. QuerySet diproses melalui `serializers.serialize('json', ...)` untuk diubah menjadi string JSON, lalu dibungkus ke dalam `HttpResponse` dengan header `content_type="application/json"` agar dikenali dengan tepat oleh user
+   3. Pada halaman yang menampilkan data, string JSON tersebut dideserialisasi kembali (`serializers.deserialize()`) menjadi objek model, agar dapat dimasukkan ke context dan ditampilkan oleh template engine Django
+
+   B.Pentingnya Serialization: Protokol HTTP hanya dapat mentransmisikan data dalam bentuk  raw text / binary, bukan struktur objek dalam memori internal Python. Serialization bertindak sebagai penerjemah yang mengonversi objek model kompleks Django menjadi format teks universal (seperti JSON) yang dapat dikirim melalui internet dan dipahami oleh berbagai platform user
 
 ## D. AI Closure : 
 - Tool used: Claude.ai
 - How it was used: 
+    -Diskusi mengenai konsep template inheritance, seperti perbedaan struktur file sebelum/sesudah menggunakan `{% extends %}`, dan bagian-bagian /templates/ yang harus dipindahkan ke base.html
+    -Diskusi fungsi Create & Update seperti pemahaman parameter `instance=` pada `ModelForm`
+    -Debugging bug ketika isi berkas education.html dan education_form.html tertukar (membandingkan kode di kedua berkas sekaligus melihat apa yang terjadi pada preview local dengan runserver)
