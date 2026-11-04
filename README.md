@@ -191,3 +191,5 @@ Kelas : PBP C
 3. XSS adalah serangan dengan menyisipkan skrip harmful yang dijalankan di browser pengguna. Data dari AJAX perlu diamankan secara eksplisit seperti menggunakan textContent karena JavaScript dapat memasukkan data sebagai HTML aktif. Template Django secara default melakukan auto-escaping.
 
 ## D. AI Disclosure :
+- Tool used: Claude AI
+- How it was used: Diskusi mengenai pendekatan implementasi fitur Education, mencakup sisi backend, frontend, dan validasi input. Selain itu, membantu menyusun kerangka tes untuk fitur tersebut.
