@@ -137,16 +137,102 @@
                         </div>
                     </div>
                 {% endif %}
+
+                {% if can_edit_education %}
+                    <div id="education-edit-modal"
+                        class="project-delete-modal"
+                        popover="auto"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="education-edit-title">
+                        <button type="button"
+                                class="project-delete-modal__backdrop"
+                                popovertarget="education-edit-modal"
+                                popovertargetaction="hide"
+                                aria-label="Tutup form edit Education"></button>
+
+                        <div class="project-delete-modal__content">
+                            <button type="button"
+                                    class="project-delete-modal__close"
+                                    popovertarget="education-edit-modal"
+                                    popovertargetaction="hide"
+                                    aria-label="Tutup form edit Education">×</button>
+
+                            <h2 id="education-edit-title">Edit Education</h2>
+
+                            <form id="education-edit-form">
+                                <input type="hidden" id="edit-education-id">
+
+                                <div class="form-group">
+                                    <label for="edit-education-institution">Institusi</label>
+                                    <input type="text"
+                                           id="edit-education-institution"
+                                           name="institution"
+                                           required
+                                           maxlength="255">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="edit-education-degree">Gelar / Program Studi</label>
+                                    <input type="text"
+                                           id="edit-education-degree"
+                                           name="degree"
+                                           required
+                                           maxlength="255">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="edit-education-description">Deskripsi</label>
+                                    <textarea id="edit-education-description"
+                                              name="description"
+                                              rows="3"></textarea>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="edit-education-start-year">Tahun Mulai</label>
+                                    <input type="number"
+                                           id="edit-education-start-year"
+                                           name="start_year"
+                                           required
+                                           min="1900"
+                                           max="2100">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="edit-education-end-year">Tahun Selesai</label>
+                                    <input type="number"
+                                           id="edit-education-end-year"
+                                           name="end_year"
+                                           min="1900"
+                                           max="2100"
+                                           placeholder="Biarkan kosong jika masih berlangsung">
+                                </div>
+
+                                <div class="project-delete-modal__actions">
+                                    <button type="button"
+                                            class="button button-secondary"
+                                            popovertarget="education-edit-modal"
+                                            popovertargetaction="hide">
+                                        Batal
+                                    </button>
+                                    <button id="education-edit-submit"
+                                            type="submit"
+                                            class="button">
+                                        Simpan Perubahan
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                {% endif %}
             </div>
         </section>
     </main>
 
     <script>
     const EDUCATION_ENDPOINT = "{% url 'api:education-list' %}";
-    const EDIT_EDUCATION_URL =
-        "{% url 'main:update_education' '00000000-0000-0000-0000-000000000000' %}";
-    const DELETE_EDUCATION_URL =
-        "{% url 'main:delete_education' '00000000-0000-0000-0000-000000000000' %}";
+    const DETAIL_EDUCATION_ENDPOINT =
+        "{% url 'api:education-detail' '00000000-0000-0000-0000-000000000000' %}";
     const STAR_EDUCATION_ENDPOINT =
         "{% url 'api:education-star' '00000000-0000-0000-0000-000000000000' %}";
 
@@ -172,6 +258,10 @@
     const addEducationForm = document.getElementById("education-add-form");
     const addEducationModal = document.getElementById("education-add-modal");
     const addEducationSubmit = document.getElementById("education-add-submit");
+
+    const editEducationForm = document.getElementById("education-edit-form");
+    const editEducationModal = document.getElementById("education-edit-modal");
+    const editEducationSubmit = document.getElementById("education-edit-submit");
 
     const SEARCH_DEBOUNCE_DELAY = 300;
     let educationSearchTimer;
@@ -295,6 +385,20 @@
         }
     }
 
+    function openEditEducationModal(item) {
+        if (!editEducationModal) return;
+        document.getElementById("edit-education-id").value = item.id;
+        document.getElementById("edit-education-institution").value = item.institution || "";
+        document.getElementById("edit-education-degree").value = item.degree || "";
+        document.getElementById("edit-education-description").value = item.description || "";
+        document.getElementById("edit-education-start-year").value = item.start_year || "";
+        document.getElementById("edit-education-end-year").value = item.end_year ?? "";
+
+        if (typeof editEducationModal.showPopover === "function") {
+            editEducationModal.showPopover();
+        }
+    }
+
     function buildEducationCard(item) {
         const article = document.createElement("article");
         article.className = "experience-card";
@@ -344,14 +448,14 @@
         actions.className = "project-actions";
 
         if (CAN_EDIT_EDUCATION) {
-            const editLink = document.createElement("a");
-            editLink.className = "button button-secondary";
-            editLink.href = educationActionUrl(
-                EDIT_EDUCATION_URL,
-                item.id
-            );
-            editLink.textContent = "Edit";
-            actions.appendChild(editLink);
+            const editButton = document.createElement("button");
+            editButton.type = "button";
+            editButton.className = "button button-secondary";
+            editButton.textContent = "Edit";
+            editButton.addEventListener("click", () => {
+                openEditEducationModal(item);
+            });
+            actions.appendChild(editButton);
         }
 
         if (starButton) {
@@ -359,26 +463,53 @@
         }
 
         if (CAN_DELETE_EDUCATION) {
-            const deleteForm = document.createElement("form");
-            deleteForm.method = "post";
-            deleteForm.action = educationActionUrl(
-                DELETE_EDUCATION_URL,
-                item.id
-            );
-            deleteForm.style.display = "inline";
-
-            const tokenInput = document.createElement("input");
-            tokenInput.type = "hidden";
-            tokenInput.name = "csrfmiddlewaretoken";
-            tokenInput.value = csrfToken;
-
             const deleteButton = document.createElement("button");
-            deleteButton.type = "submit";
+            deleteButton.type = "button";
             deleteButton.className = "button button-danger";
             deleteButton.textContent = "Hapus";
+            deleteButton.addEventListener("click", async () => {
+                if (!window.confirm(`Hapus data pendidikan di ${item.institution}?`)) {
+                    return;
+                }
+                deleteButton.disabled = true;
+                try {
+                    const token = getCookie("csrftoken") || csrfToken;
+                    const response = await fetch(
+                        educationActionUrl(DETAIL_EDUCATION_ENDPOINT, item.id),
+                        {
+                            method: "DELETE",
+                            headers: {
+                                "Accept": "application/json",
+                                "X-CSRFToken": token,
+                            },
+                        }
+                    );
 
-            deleteForm.append(tokenInput, deleteButton);
-            actions.appendChild(deleteForm);
+                    if (!response.ok && response.status !== 204) {
+                        const result = await response.json().catch(() => ({}));
+                        throw new Error(apiErrorMessage(result, response.status));
+                    }
+
+                    if (typeof showToast === "function") {
+                        showToast(
+                            "Sukses",
+                            "Riwayat pendidikan berhasil dihapus.",
+                            "success"
+                        );
+                    }
+                    await loadEducation(searchInput.value.trim());
+                } catch (error) {
+                    console.error("Gagal menghapus Education:", error);
+                    if (typeof showToast === "function") {
+                        showToast("Gagal menghapus", error.message, "error");
+                    } else {
+                        alert(error.message);
+                    }
+                } finally {
+                    deleteButton.disabled = false;
+                }
+            });
+            actions.appendChild(deleteButton);
         }
 
         if (actions.childElementCount > 0) {
@@ -540,6 +671,71 @@
                 }
             } finally {
                 addEducationSubmit.disabled = false;
+            }
+        });
+    }
+
+    if (editEducationForm) {
+        editEducationForm.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            editEducationSubmit.disabled = true;
+
+            const id = document.getElementById("edit-education-id").value;
+            const endYearVal = document.getElementById("edit-education-end-year").value;
+            const payload = {
+                institution: document.getElementById("edit-education-institution").value.trim(),
+                degree: document.getElementById("edit-education-degree").value.trim(),
+                description: document.getElementById("edit-education-description").value.trim(),
+                start_year: parseInt(document.getElementById("edit-education-start-year").value, 10),
+                end_year: endYearVal ? parseInt(endYearVal, 10) : null,
+            };
+
+            try {
+                const token = getCookie("csrftoken") || csrfToken;
+                const response = await fetch(
+                    educationActionUrl(DETAIL_EDUCATION_ENDPOINT, id),
+                    {
+                        method: "PUT",
+                        headers: {
+                            "Accept": "application/json",
+                            "Content-Type": "application/json",
+                            "X-CSRFToken": token,
+                        },
+                        body: JSON.stringify(payload),
+                    }
+                );
+
+                const result = await response.json().catch(() => ({}));
+
+                if (!response.ok) {
+                    throw new Error(apiErrorMessage(result, response.status));
+                }
+
+                if (editEducationModal && typeof editEducationModal.hidePopover === "function") {
+                    editEducationModal.hidePopover();
+                }
+
+                if (typeof showToast === "function") {
+                    showToast(
+                        "Perubahan disimpan",
+                        "Riwayat pendidikan berhasil diperbarui.",
+                        "success"
+                    );
+                }
+                await loadEducation(searchInput.value.trim());
+            } catch (error) {
+                console.error("Gagal memperbarui Education:", error);
+                if (typeof showToast === "function") {
+                    showToast(
+                        "Gagal memperbarui Education",
+                        error.message,
+                        "error"
+                    );
+                } else {
+                    alert(error.message);
+                }
+            } finally {
+                editEducationSubmit.disabled = false;
             }
         });
     }
