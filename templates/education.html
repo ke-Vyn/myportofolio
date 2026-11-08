@@ -84,11 +84,7 @@
 
                             <h2 id="education-add-title">Tambah Education</h2>
 
-                            <form id="education-add-form"
-                                method="post"
-                                action="{% url 'main:create_education' %}">
-                                {% csrf_token %}
-
+                            <form id="education-add-form">
                                 <div class="form-group">
                                     <label for="{{ education_form.institution.id_for_label }}">
                                         {{ education_form.institution.label }}
@@ -146,13 +142,13 @@
     </main>
 
     <script>
-    const EDUCATION_ENDPOINT = "{% url 'main:get_education_json' %}";
+    const EDUCATION_ENDPOINT = "{% url 'api:education-list' %}";
     const EDIT_EDUCATION_URL =
         "{% url 'main:update_education' '00000000-0000-0000-0000-000000000000' %}";
     const DELETE_EDUCATION_URL =
         "{% url 'main:delete_education' '00000000-0000-0000-0000-000000000000' %}";
-    const STAR_EDUCATION_URL =
-        "{% url 'main:toggle_education_star' '00000000-0000-0000-0000-000000000000' %}";
+    const STAR_EDUCATION_ENDPOINT =
+        "{% url 'api:education-star' '00000000-0000-0000-0000-000000000000' %}";
 
     const educationSection = document.getElementById("education");
 
@@ -172,7 +168,7 @@
     const searchInput = document.getElementById("education-search-input");
     const csrfToken = document.querySelector(
         "#education-csrf-source [name=csrfmiddlewaretoken]"
-    ).value;
+    )?.value || "";
     const addEducationForm = document.getElementById("education-add-form");
     const addEducationModal = document.getElementById("education-add-modal");
     const addEducationSubmit = document.getElementById("education-add-submit");
@@ -180,6 +176,13 @@
     const SEARCH_DEBOUNCE_DELAY = 300;
     let educationSearchTimer;
     let educationRequestController;
+
+    function getCookie(name) {
+        const prefix = `${name}=`;
+        const cookie = document.cookie.split(";").map(value => value.trim())
+            .find(value => value.startsWith(prefix));
+        return cookie ? decodeURIComponent(cookie.slice(prefix.length)) : null;
+    }
 
     function showEducationState(state) {
         loadingState.classList.toggle("hide", state !== "loading");
@@ -190,7 +193,7 @@
 
     function makeTextElement(tagName, className, value) {
         const element = document.createElement(tagName);
-        element.className = className;
+        if (className) element.className = className;
         element.textContent = String(value ?? "");
         return element;
     }
@@ -200,6 +203,22 @@
             "00000000-0000-0000-0000-000000000000",
             encodeURIComponent(id)
         );
+    }
+
+    function apiErrorMessage(data, status) {
+        if (!data || typeof data !== "object") {
+            return `Request gagal (HTTP ${status}).`;
+        }
+        if (data.detail) return data.detail;
+        const messages = [];
+        for (const [key, value] of Object.entries(data)) {
+            if (Array.isArray(value)) {
+                messages.push(`${key}: ${value.join(", ")}`);
+            } else if (typeof value === "string") {
+                messages.push(value);
+            }
+        }
+        return messages.join(" ") || `Request gagal (HTTP ${status}).`;
     }
 
     function updateStarDisplay(item, starInfo, starButton) {
@@ -222,6 +241,9 @@
                 "aria-pressed",
                 String(item.is_starred)
             );
+            if (item.starred_by_names) {
+                starButton.title = item.starred_by_names;
+            }
         }
     }
 
@@ -229,13 +251,14 @@
         starButton.disabled = true;
 
         try {
+            const token = getCookie("csrftoken") || csrfToken;
             const response = await fetch(
-                educationActionUrl(STAR_EDUCATION_URL, item.id),
+                educationActionUrl(STAR_EDUCATION_ENDPOINT, item.id),
                 {
                     method: "POST",
                     headers: {
                         "Accept": "application/json",
-                        "X-CSRFToken": csrfToken,
+                        "X-CSRFToken": token,
                     },
                 }
             );
@@ -243,14 +266,21 @@
             const result = await response.json();
 
             if (!response.ok) {
-                throw new Error(
-                    result.error || `Request gagal (${response.status})`
-                );
+                throw new Error(apiErrorMessage(result, response.status));
             }
 
             item.star_count = result.star_count;
             item.is_starred = result.is_starred;
+            item.starred_by_names = result.starred_by_names;
             updateStarDisplay(item, starInfo, starButton);
+
+            if (typeof showToast === "function") {
+                showToast(
+                    "Sukses",
+                    item.is_starred ? "Star ditambahkan." : "Star dibatalkan.",
+                    "success"
+                );
+            }
         } catch (error) {
             console.error("Gagal mengubah star Education:", error);
             if (typeof showToast === "function") {
@@ -385,7 +415,7 @@
             });
 
             if (!response.ok) {
-                throw new Error(`Request gagal (${response.status})`);
+                throw new Error(`Request gagal (HTTP ${response.status})`);
             }
 
             const educationData = await response.json();
@@ -444,7 +474,7 @@
     });
 
     document.getElementById("education-retry")
-        .addEventListener("click", () => {
+        ?.addEventListener("click", () => {
             loadEducation(searchInput.value.trim());
         });
 
@@ -455,53 +485,59 @@
             event.preventDefault();
             addEducationSubmit.disabled = true;
 
+            const formData = new FormData(addEducationForm);
+            const payload = {
+                institution: (formData.get("institution") || "").trim(),
+                degree: (formData.get("degree") || "").trim(),
+                description: (formData.get("description") || "").trim(),
+                start_year: parseInt(formData.get("start_year"), 10),
+                end_year: formData.get("end_year")
+                    ? parseInt(formData.get("end_year"), 10)
+                    : null,
+            };
+
             try {
-                const response = await fetch(addEducationForm.action, {
+                const token = getCookie("csrftoken") || csrfToken;
+                const response = await fetch(EDUCATION_ENDPOINT, {
                     method: "POST",
                     headers: {
                         "Accept": "application/json",
-                        "X-CSRFToken": csrfToken,
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": token,
                     },
-                    body: new FormData(addEducationForm),
+                    body: JSON.stringify(payload),
                 });
 
                 const result = await response.json();
 
                 if (!response.ok) {
-                    const validationMessages = Object.entries(
-                        result.errors || {}
-                    ).flatMap(([field, errors]) =>
-                        errors.map((error) => `${field}: ${error.message}`)
-                    );
-
-                    const message = validationMessages.length
-                        ? validationMessages.join(" ")
-                        : result.error || `Request gagal (${response.status})`;
-
-                    throw new Error(message);
-                }
-
-                if (response.status !== 201) {
-                    throw new Error("Server tidak mengonfirmasi data tersimpan.");
+                    throw new Error(apiErrorMessage(result, response.status));
                 }
 
                 addEducationForm.reset();
-                addEducationModal.hidePopover();
+                if (addEducationModal && typeof addEducationModal.hidePopover === "function") {
+                    addEducationModal.hidePopover();
+                }
 
+                if (typeof showToast === "function") {
+                    showToast(
+                        "Education ditambahkan",
+                        "Riwayat pendidikan berhasil ditambahkan.",
+                        "success"
+                    );
+                }
                 await loadEducation(searchInput.value.trim());
-
-                showToast(
-                    "Education ditambahkan",
-                    result.message,
-                    "success"
-                );
             } catch (error) {
                 console.error("Gagal menambahkan Education:", error);
-                showToast(
-                    "Gagal menambahkan Education",
-                    error.message,
-                    "error"
-                );
+                if (typeof showToast === "function") {
+                    showToast(
+                        "Gagal menambahkan Education",
+                        error.message,
+                        "error"
+                    );
+                } else {
+                    alert(error.message);
+                }
             } finally {
                 addEducationSubmit.disabled = false;
             }
