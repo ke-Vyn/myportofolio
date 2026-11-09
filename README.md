@@ -193,3 +193,73 @@ Kelas : PBP C
 ## D. AI Disclosure :
 - Tool used: Claude AI
 - How it was used: Diskusi mengenai pendekatan implementasi fitur Education, mencakup sisi backend, frontend, dan validasi input. Selain itu, membantu menyusun kerangka tes untuk fitur tersebut.
+
+---
+
+# 9/11/2026 - Tugas 6
+## A. Weekly Instruction Step :
+1. Clone this repository
+    git clone https://github.com/ke-Vyn/myportofolio.git
+    cd myportofolio
+2. Create a virtual environment and activate it
+    python -m venv env
+    env\Scripts\activate
+3. Install Dependencies 
+    pip install -r requirements.txt
+4. Apply database migrations
+    python manage.py migrate
+5. Create a superuser (portfolio owner)
+    python manage.py createsuperuser
+6. Run server
+    python manage.py runserver
+7. Open `http://localhost:8000/admin/`, make group called `Editor`, then move editor's account into it
+8. Open `http://localhost:8000` in any browser
+
+## B. Weekly Updates :
+1. Menerapkan Django REST Framework untuk modul Education via `EducationSerializer` dengan fields eksplisit, informasi star read-only, dan sanitasi `strip_tags`
+2. Menerapkan kontrol akses 4 role (pengunjung, pengguna biasa, editor, pemilik) dengan `IsPortfolioOwnerOrEditorOrReadOnly` pada endpoint daftar/detail dan `IsAuthenticated` pada endpoint star di `api/v1/educations/`
+3. Mengintegrasikan frontend halaman Education secara penuh via `fetch()` tanpa reload untuk listing, pencarian debounced via query params, penambahan (POST), toggle star, modal edit in-place (PUT), dan hapus data (DELETE)
+4. Menambahkan notifikasi Toast untuk umpan balik sukses serta penanganan error validasi (400) dan izin (403), dengan proteksi CSRF token di setiap mutasi
+5. Menambahkan unit test komprehensif di `main/tests_api.py` yang menguji hak akses 4 peran, validasi input, verifikasi database, serta penolakan request tanpa CSRF via `APIClient(enforce_csrf_checks=True)`
+
+## C. Reflection : 
+### Assignment 6
+1.
+A. REST (Representational State Transfer): Gaya arsitektur komunikasi client-server yang bersifat stateless, mengelola data sebagai resource melalui antarmuka seragam (uniform interface).
+
+B. JSON saja belum cukup RESTful karena JSON hanyalah format pertukaran data (payload); Sebuah API baru memenuhi kaidah REST jika menerapkan semantik HTTP secara benar (Richardson Maturity Model Level 2): memanfaatkan URL berbasis kata benda/resource, memetakan aksi menggunakan kata kerja HTTP (`GET`, `POST`, `PUT`, `PATCH`, `DELETE`) serta mengembalikan kode status HTTP yang tepat (`200`, `201`, `400`, `403`, `404`).  
+*Jika hanya Mengembalikan JSON via `GET /hapus_data` atau selalu mengirim `200 OK` saat error tetap bukan RESTful.
+
+C. Perbedaan PUT dan PATCH:
+- `PUT` (Full Replacement): Mengganti seluruh data resource secara utuh (idempoten). Semua field wajib dikirim, field yang tidak disertakan akan dikosongkan/error. Contoh: Form edit akun lengkap di mana seluruh kolom profil diisi dan dikirim ulang.
+- `PATCH` (Partial Update): Memperbarui sebagian field tanpa mengubah field lainnya. Klien hanya mengirimkan field yang ingin diubah. Contoh: Fitur toggle status pada suatu item / mengganti nama proyek saja.
+
+2.
+A. Peran Serializer:
+- Serialisasi (Outbound): Mengubah objek kompleks Django ORM (Model/QuerySet) menjadi tipe data Python primitif agar dapat dirender menjadi JSON.
+- Deserialisasi & Validasi (Inbound): Mengurai data JSON masukan, memvalidasi integritas dan aturan datanya (`.is_valid()`), lalu mengonversinya menjadi objek yang siap disimpan (`.save()`).
+
+B. Keuntungan dibanding merakit kamus manual (`JsonResponse`):
+- Validasi terpusat & otomatis: Mendukung validasi otomatis dari batasan model (`max_length`, `unique`) serta validasi kustom tingkat field/objek tanpa if-else manual di view.
+- Keamanan data: Mencegah kebocoran data sensitif (misal hash password) melalui pendefinisian eksplisit atribut pada `fields`.
+- DRY (Don't Repeat Yourself): `ModelSerializer` otomatis menangani pemetaan query, sanitasi, serta logika fungsi `create()` dan `update()`.
+
+3.
+A. Perbedaan autentikasi dan otorisasi pada Django REST Framework:
+- Autentikasi (Who are you?): Memverifikasi identitas pengguna (cth: validasi sesi login atau token) dan menetapkan `request.user`.
+- Otorisasi (What can you do?): Memeriksa izin/hak akses pengguna yang sudah teridentifikasi terhadap suatu resource atau aksi (misal mengecek apakah user adalah pemilik data).
+
+B. Mengapa hak akses harus diperiksa di server (Permission Class):  
+Prinsip Never Trust the Client. Menyembunyikan tombol di template hanyalah aspek UX, bukan lapisan keamanan. Klien/penyerang dapat merekayasa tampilan via Inspect Element atau menembak langsung endpoint API menggunakan cURL, Postman, maupun Fetch console. Verifikasi di permission class server adalah satu-satunya pertahanan yang tidak bisa dimanipulasi dari sisi klien.
+
+4.
+A. Alasan Permintaan Mutasi Butuh CSRF pada `SessionAuthentication`:
+- `SessionAuthentication` bergantung pada session cookie browser yang otomatis disertakan pada setiap request ke domain tujuan (juga masih tetap bergantung jikar equest dipicu tanpa sengaja oleh situs pihak ketiga (Cross-Site Request Forgery)).
+- Token CSRF (`X-CSRFToken`) membuktikan bahwa permintaan mutasi (`POST`, `PUT`, `PATCH`, `DELETE`) berasal secara sah dari aplikasi web sendiri.
+
+B. Mengapa `force_authenticate` Tidak Cukup:
+- `force_authenticate` berfungsi untuk pengujian logika internal view/izin secara terisolasi dengan cara mem-bypass seluruh middleware autentikasi dan penegakan CSRF. Request yang menggunakan `force_authenticate` tidak akan pernah memvalidasi token CSRF. Untuk membuktikan proteksi CSRF aktif dan menolak permintaan tanpa token, pengujian harus menggunakan `APIClient(enforce_csrf_checks=True)` dengan metode login sesi biasa (`client.login()`).
+
+## D. AI Disclosure :
+- Tool used: Gemini AI
+- How it was used: Diskusi konsep arsitektur RESTful API dan Django REST Framework (DRF) mencakup siklus serializer, role-based permission 4 peran, proteksi CSRF pada SessionAuthentication, serta penyusunan kerangka unit test di tests_api.py.
