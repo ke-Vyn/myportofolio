@@ -25,10 +25,10 @@ class ProjectSerializer(serializers.ModelSerializer):
         return value
 
     def validate_description(self, value):
-        return strip_tags(value)
+        return strip_tags(value or "")
 
     def validate_tech_stack(self, value):
-        return strip_tags(value)
+        return strip_tags(value or "")
 
     def get_star_count(self, obj):
         return obj.starred_by.count()
@@ -70,7 +70,7 @@ class EducationSerializer(serializers.ModelSerializer):
         return value
 
     def validate_description(self, value):
-        return strip_tags(value)
+        return strip_tags(value or "")
 
     def get_star_count(self, obj):
         return obj.starred_by.count()
